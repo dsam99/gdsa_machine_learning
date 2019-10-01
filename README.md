@@ -4,8 +4,6 @@ This repository contains my work at NASA JPL during the summer of 2019. The sign
 
 The research project monitored the MSL GDS downlink process to determine whether or not data transmission passes are successful. This project also helps us explain the importance of features in the dataset and perform anomaly detection
 
-<!-- ## Data Collection
-
 The data is collected from the following APIs:
  - maros
  - tlmweb
