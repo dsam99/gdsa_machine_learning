@@ -9,6 +9,8 @@ from tensorflow.keras.layers import Dense, Dropout
 from tensorflow.keras.optimizers import Adam
 from keras.utils import plot_model
 
+from sklearn.model_selection import StratifiedShuffleSplit
+
 # setting environment to allow duplicated KMP library
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
@@ -40,7 +42,7 @@ class Basic_Model():
         optimizer = Adam(lr=self.learning_rate)
         self.model.compile(loss='binary_crossentropy', optimizer=optimizer, metrics=['accuracy'])
     
-    def train(self, X, y, validation_x, validation_y):
+    def train(self, X, y, validation_x=None, validation_y=None):
         '''
         Function to train a feed-forward neural network on input data
 
@@ -49,6 +51,8 @@ class Basic_Model():
         y - labels
         '''
 
+        if validation_x == None:
+            result = self.model.fit(X, y, epochs=400, batch_size=20, validation_data=None)
         result = self.model.fit(X, y, epochs=400, batch_size=20, validation_data=(validation_x, validation_y))            
         # function for plotting training and validation accuracy for training
         plot_training(result)
@@ -314,6 +318,47 @@ def main():
     # final test loss
     model.test(test_x, test_y)
 
+def ryan_main():
+
+    df = pd.read_csv('../data/processed_data/sols_337_2450_ground_truth.csv')
+
+    cols = ['BinaryGDSLabel', 'DylanLabel', 'GDSLabel', 'MiguelLabel', 'GDS__id',
+            'GDS_dataActual', 'GDS_dataPredict', 'MAROS_lander_return_value',
+            'MAROS_max_elevation', 'MAROS_orbiter_return_value', 'MAROS_rise_elevation',
+            'TDS_GDS_end_timedelta', 'TDS_GDS_start_timedelta', 'TDS_dssId_0',
+            'TDS_dssId_14', 'TDS_dssId_15', 'TDS_dssId_24', 'TDS_dssId_25',
+            'TDS_dssId_26', 'TDS_dssId_34', 'TDS_dssId_35', 'TDS_dssId_36',
+            'TDS_dssId_43', 'TDS_dssId_45', 'TDS_dssId_50', 'TDS_dssId_54',
+            'TDS_dssId_55', 'TDS_dssId_63', 'TDS_dssId_64', 'TDS_dssId_65',
+            'TDS_insync_megabits', 'TDS_insync_tf_0_frames',
+            'TDS_insync_tf_32_frames', 'TDS_outasync_tf_frames', 'TDS_to_GDS_delta',
+            'Unnamed: 0_y', 'actual_to_predict_begin_timedelta',
+            'actual_to_predict_delta', 'actual_to_predict_end_timedelta',
+            'orbiter_DTE', 'orbiter_MEX', 'orbiter_MRO', 'orbiter_MVN',
+            'orbiter_ODY', 'orbiter_TGO', 'orbiter_nan', 'orbiter_to_TDS_delta',
+            'rover_to_orbiter_delta', 'GroundTruth']
+
+    df = df[cols]
+    # print(df.columns)
+    df = df.fillna(0)
+    df_arr = df.values
+    print(df_arr)
+    X = df_arr[:,5:-1]
+    Y = df_arr[:,-1].astype(int)
+    sss = StratifiedShuffleSplit(n_splits=1, test_size=0.1, random_state=0)
+    # print(sss.get_n_splits(X, Y))
+
+    for train_index, test_index in sss.split(X, Y):
+        X_train, X_test = X[train_index], X[test_index] 
+        Y_train, Y_test = Y[train_index], Y[test_index]
+        input_size = np.shape(X_train)[1]
+        model = Basic_Model(input_size)
+
+        # model.train(X_train, Y_train, None, None)
+        # print("Overall Test Accuracy: " + str(model.test(X_test, Y_test)))
+
+
+
 def main_ids_no_categorical():
     X, y, validation_x, validation_y, test_x, test_y, test_id = create_id_dataset(remove_categorical=True)
 
@@ -427,7 +472,8 @@ def main_ids_no_categorical():
 
 if __name__ == "__main__":
     # main_ids()
-    main_ids_no_categorical()
-
+    # main_ids_no_categorical()
+    ryan_main()
+    # main()
 
 
